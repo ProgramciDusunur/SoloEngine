@@ -6,7 +6,9 @@
 #   make -f Makefile.clean windows # remove only windows .exe
 #   make -f Makefile.clean android # remove only android binaries
 
-.PHONY: all mac linux windows android debug distclean list
+.DEFAULT_GOAL := all
+
+.PHONY: all mac linux windows android debug distclean list objs
 
 ifeq ($(OS),Windows_NT)
 EXEEXT := .exe
