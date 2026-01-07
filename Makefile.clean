@@ -8,9 +8,15 @@
 
 .PHONY: all mac linux windows android debug distclean list
 
+ifeq ($(OS),Windows_NT)
+EXEEXT := .exe
+else
+EXEEXT :=
+endif
+
 MAC_BIN := soloengine_mac
-LINUX_BIN := soloengine_linux
-WIN_BIN := soloengine_windows.exe
+LINUX_BIN := soloengine_linux$(EXEEXT)
+WIN_BIN := soloengine_windows$(EXEEXT)
 ANDROID_BIN := soloengine_android
 ANDROID_DEBUG_BIN := soloengine_android_debug
 
