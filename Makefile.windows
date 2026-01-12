@@ -1,7 +1,7 @@
 # Summary: Normalized targets and wrapped strip tool invocation for safer execution.
 .PHONY: build default
 
-EXE := soloengine_windows
+EXE := SoloEngine
 
 ifeq ($(OS),Windows_NT)
 EXEEXT := .exe

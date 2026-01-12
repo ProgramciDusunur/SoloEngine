@@ -1,7 +1,7 @@
 # Summary: Consolidated build workflow and guarded strip step for Android target.
 .PHONY: build default
 
-EXE := soloengine_android
+EXE := SoloEngine
 
 SOURCES := main.cpp \
            board_bb.cpp \

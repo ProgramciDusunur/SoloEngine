@@ -2,7 +2,7 @@
 # Linux build
 .PHONY: build default
 
-EXE := soloengine_linux
+EXE := SoloEngine
 
 ifeq ($(OS),Windows_NT)
 EXEEXT := .exe

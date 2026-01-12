@@ -16,11 +16,11 @@ else
 EXEEXT :=
 endif
 
-MAC_BIN := soloengine_mac
-LINUX_BIN := soloengine_linux$(EXEEXT)
-WIN_BIN := soloengine_windows$(EXEEXT)
-ANDROID_BIN := soloengine_android
-ANDROID_DEBUG_BIN := soloengine_android_debug
+MAC_BIN := SoloEngine
+LINUX_BIN := SoloEngine$(EXEEXT)
+WIN_BIN := SoloEngine$(EXEEXT)
+ANDROID_BIN := SoloEngine
+ANDROID_DEBUG_BIN := SoloEngine
 
 # Fathom tablebase objects may appear under fathom/src in some builds; add patterns
 EXTRA_OBJS := $(wildcard *.o)

@@ -3,7 +3,7 @@
 
 .PHONY: all asan
 
-EXE := soloengine_mac
+EXE := SoloEngine
 
 SOURCES := main.cpp \
            board_bb.cpp \
