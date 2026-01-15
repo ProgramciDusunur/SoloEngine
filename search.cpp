@@ -316,7 +316,9 @@ int negamax(Board& board, int depth, int alpha, int beta, int ply, std::vector<u
         
         // margin: for every depth, we allow a margin of 100 centipawns
         // The deeper we go, the larger the margin should be
-        int margin = 80 * depth; 
+        int margin = 80 * depth;
+
+        margin += 6 * depth * depth;
 
         if (staticEval - margin >= beta) {
             // "I'm so far ahead that even if I reduce the margin, I still surpass the opponent's threshold, so I don't need to search further and lose time"
