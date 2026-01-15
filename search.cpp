@@ -336,7 +336,7 @@ int negamax(Board& board, int depth, int alpha, int beta, int ply, std::vector<u
         // Check if side to move is currently in check
         bool inCheck = is_square_attacked(board, kingRow, kingCol, !board.isWhiteTurn);
 
-        if (!inCheck && depth >= 3 && (beta - alpha == 1)) {
+        if (!inCheck && depth >= 3 && (beta - alpha == 1) && staticEval >= beta) {
             // Make a "null move" by flipping side to move
             const int prevEnPassantCol = board.enPassantCol;
 
