@@ -348,7 +348,7 @@ int negamax(Board& board, int depth, int alpha, int beta, int ply, std::vector<u
             history.push_back(nullHash);
 
             // Reduction factor R (typical values 2..3). Ensure we don't search negative depth
-            int R = std::min(3, std::max(1, depth - 2));
+            int R = (5120 + depth * 256) / 1024;
             std::vector<Move> nullPv;
             int nullScore = -negamax(board, depth - 1 - R, -beta, -beta + 1, ply + 1, history, nullPv);
 
