@@ -383,8 +383,11 @@ int negamax(Board& board, int depth, int alpha, int beta, int ply, std::vector<u
         const Move* ttMovePtr = ttHit ? &ttMove : nullptr;
         return scoreMove(board, a, ply, ttMovePtr) > scoreMove(board, b, ply, ttMovePtr);
     });
+
+    int quiet_moves = 0;
     
     for (Move& move : possibleMoves) {
+        bool quiet_move = (move.capturedPiece == 0 && move.promotion == 0 && !move.isEnPassant);
         int lmpCount = (3 * depth * depth) + 4;
         // Late Move Pruning (LMP) logic
         if (!pvNode && depth > 3 && depth < 8 && movesSearched >= lmpCount && !inCheck && move.promotion == 0 && move.capturedPiece == 0) {
@@ -405,6 +408,11 @@ int negamax(Board& board, int depth, int alpha, int beta, int ply, std::vector<u
         }
 
         board.makeMove(move);
+
+        if (quiet_move) {
+            quiet_moves++;
+        }
+
         movesSearched++;
         std::vector<Move> childPv;
         uint64_t newHash = position_key(board);
@@ -420,6 +428,14 @@ int negamax(Board& board, int depth, int alpha, int beta, int ply, std::vector<u
             if (move.capturedPiece == 0 && !move.isEnPassant && move.promotion == 0 && depth >= 3 && movesSearched > 4) {
                 reduction = 1 + (depth / 6); // Increase reduction with depth
 
+                
+                if (quiet_move) {
+                    // Reduce More
+                    if (quiet_moves >= 4) {
+                        reduction += 1; // More reduction for many quiet moves
+                    }
+                }
+                
                 if (depth - 1 - reduction < 1) reduction = depth - 2; // Ensure we don't search negative depth
             }
             
