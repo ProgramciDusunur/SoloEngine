@@ -11,7 +11,7 @@
 #include <thread>
 #include <atomic>
 
-#define VERSION "1.1.0"
+#define VERSION "1.2.1"
 
 static uint64_t perft(Board& board, int depth) {
     if (depth <= 0) return 1ULL;
@@ -114,6 +114,7 @@ void bench() {
 int main(int argc, char* argv[]) {
     std::cout.setf(std::ios::unitbuf); // Disable output buffering
     init_all();
+    initLMRtables();
     if (argc > 1 && std::string(argv[1]) == "bench") {
         bench();
         return 0;
