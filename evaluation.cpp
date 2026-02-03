@@ -44,6 +44,9 @@ const int RookMobility[15] = { -10, -5, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 20, 2
 // QUEEN bonuses are not that much according to other pieces, it is because QUEEN already can go to many squares and this might cause our engine to get its QUEEN out too early
 const int QueenMobility[28] = { -5, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15 };
 
+const int king_shield_bonus_middlegame = 6;
+const int king_shield_bonus_endgame = 2;
+
 // Pesto tables
 const int mg_pawn_table[64] = {
       0,   0,   0,   0,   0,   0,  0,   0,
@@ -277,6 +280,18 @@ int evaluate_board(const Board& board) {
             }
         }
     }
+
+    // King shield based safety bonus
+    int whiteKinqSq = lsb(board.piece[KING] & board.color[WHITE]);
+    int blackKinqSq = lsb(board.piece[KING] & board.color[BLACK]);
+    
+    // Middle game bonuses
+    mg[WHITE] += king_shield_bonus_middlegame * popcount(king_attacks[whiteKinqSq] & board.color[WHITE]);
+    mg[BLACK] -= king_shield_bonus_middlegame * popcount(king_attacks[blackKinqSq] & board.color[BLACK]);
+
+    // End game bonuses
+    eg[WHITE] += king_shield_bonus_endgame * popcount(king_attacks[whiteKinqSq] & board.color[WHITE]);
+    eg[BLACK] -= king_shield_bonus_endgame * popcount(king_attacks[blackKinqSq] & board.color[BLACK]);
 
     /* tapered eval */
     int mgScore = mg[side2move] - mg[OTHER(side2move)];
