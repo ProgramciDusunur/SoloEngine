@@ -44,8 +44,8 @@ const int RookMobility[15] = { -10, -5, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 20, 2
 // QUEEN bonuses are not that much according to other pieces, it is because QUEEN already can go to many squares and this might cause our engine to get its QUEEN out too early
 const int QueenMobility[28] = { -5, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15 };
 
-const int king_shield_bonus_middlegame = 6;
-const int king_shield_bonus_endgame = 2;
+const int king_shield_bonus_middlegame = 18;
+const int king_shield_bonus_endgame = 4;
 
 // Pesto tables
 const int mg_pawn_table[64] = {
