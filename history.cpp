@@ -6,8 +6,18 @@ int historyTable[64][64];
 Move killerMove[2][MAX_PLY];
 constexpr int HISTORY_MAX = 16384;
 
+/* Correction History */
+
+int CORRHIST_WEIGHT_SCALE = 256;
+int CORRHIST_GRAIN = 256;
+int CORRHIST_SIZE = 16384;
+int CORRHIST_MAX = 16384;
+
+int pawnCorrectionHistory[2][16384];
+
 void clear_history() {
     std::memset(historyTable, 0, sizeof(historyTable));
+    std::memset(pawnCorrectionHistory, 0, sizeof(pawnCorrectionHistory));
 }
 
 void update_history(int fromSq, int toSq, int depth, const Move badQuiets[256], const int& badQuietCount) { 
