@@ -388,6 +388,15 @@ int negamax(Board& board, int depth, int alpha, int beta, int ply, std::vector<u
         }
     }
 
+    // Razoring
+    if (!pvNode && !inCheck && depth <= 5 && staticEval + 200 * depth < alpha) {
+        int razoring_score = quiescence(board, alpha, beta, ply);
+        if (razoring_score < alpha) {
+            pvLine.clear();
+            return razoring_score; // Razor cutoff
+        }
+    }
+
     // Null move pruning
     {
         int kingRow = 0;
