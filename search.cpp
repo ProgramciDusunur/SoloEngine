@@ -292,6 +292,7 @@ int negamax(Board& board, int depth, int alpha, int beta, int ply, std::vector<u
 
     const SearchParams& params = get_search_params();
     bool pvNode = (beta - alpha) > 1;
+    bool rootNode = ply == 0;
     bool firstMove = true;
     const int alphaOrig = alpha;
     int maxEval = VALUE_NONE;
@@ -375,7 +376,7 @@ int negamax(Board& board, int depth, int alpha, int beta, int ply, std::vector<u
 
     // Reverse Futility Pruning 
     // Only makes sense in non-PV nodes (null-window), otherwise it can prune good PV continuations.
-    if ((beta - alpha) == 1 && depth < 9 && !inCheck && beta < MATE_SCORE - 100) {
+    if (!pvNode && depth < 9 && !inCheck && beta < MATE_SCORE - 100) {
         
         // margin: for every depth, we allow a margin of 100 centipawns
         // The deeper we go, the larger the margin should be
@@ -399,7 +400,7 @@ int negamax(Board& board, int depth, int alpha, int beta, int ply, std::vector<u
         // Check if side to move is currently in check
         bool inCheck = is_square_attacked(board, kingRow, kingCol, !board.isWhiteTurn);
 
-        if (!inCheck && depth >= 3 && (beta - alpha == 1)) {
+        if (!inCheck && depth >= 3 && !pvNode) {
             // Make a "null move" by flipping side to move
             const int prevEnPassantCol = board.enPassantCol;
 
@@ -425,7 +426,7 @@ int negamax(Board& board, int depth, int alpha, int beta, int ply, std::vector<u
                 return beta; // Null-move cutoff
             }
         }
-    }
+    }    
 
     std::vector<Move> possibleMoves = get_all_moves(board, board.isWhiteTurn);
     Move bestMove = possibleMoves.empty() ? Move() : possibleMoves[0];
@@ -449,8 +450,10 @@ int negamax(Board& board, int depth, int alpha, int beta, int ply, std::vector<u
     
     for (Move& move : possibleMoves) {
 
+        bool isQuiet = is_quiet(move);
+
         // Futility Pruning
-        if (depth < 3 && !inCheck && move.promotion == 0 && is_quiet(move)) {
+        if (!rootNode && depth < 3 && !inCheck && is_quiet(move)) {
             int futilityMargin = 100 + 60 * depth; // Margin increases with depth
             if (staticEval + futilityMargin < alpha) {
                 continue; // Skip this move, it's unlikely to raise the evaluation enough
@@ -464,8 +467,8 @@ int negamax(Board& board, int depth, int alpha, int beta, int ply, std::vector<u
             depth >= params.lmp_min_depth &&
             depth <= params.lmp_max_depth &&
             movesSearched >= lmpCount &&
-            !inCheck && move.promotion == 0 && move.capturedPiece == 0) {
-            if (!move.isEnPassant && !is_killer_move(move, ply)) {
+            !inCheck && isQuiet) {
+            if (!is_killer_move(move, ply)) {
                 continue; // skip this move (late move pruning)
             }
         }
