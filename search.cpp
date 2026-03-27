@@ -469,6 +469,10 @@ int16_t negamax(Board& board, int depth, int16_t alpha, int16_t beta, int ply, S
                     extension = 2;
                 }
             }
+            // Negative Extensions
+            else if (ttSeScore >= beta) {
+                extension = -1;
+            }
         }
 
 
