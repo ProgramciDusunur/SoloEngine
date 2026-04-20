@@ -6,6 +6,8 @@
 struct MoveInfo {
     int piece; // 0-11 (colored piece index), -1 for invalid/null
     int to;    // 0-63, -1 for invalid
+    int from; // 0-63, -1 for invalid
+    Move move;
 };
 
 // History table: [color][fromSquare][toSquare]
@@ -18,5 +20,6 @@ void reset_movestack();
 void update_history(const Board& board, int color, int fromSq, int toSq, int depth, const Move badQuiets[256], const int& badQuietCount, int ply);
 int get_history_score(int color, int fromSq, int toSq);
 int get_conhist_score(int piece, int to, int ply);
+void update_single_quiet_hist_entry(int color, int fromSq, int toSq, int bonus);
 
 #endif

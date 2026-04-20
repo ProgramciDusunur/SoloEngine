@@ -43,6 +43,10 @@ int get_conhist_score(int piece, int to, int ply) {
     return score;
 }
 
+void update_single_quiet_hist_entry(int color, int fromSq, int toSq, int bonus) {
+    historyTable[color][fromSq][toSq] += bonus;
+}
+
 void update_history(const Board& board, int color, int fromSq, int toSq, int depth, const Move badQuiets[256], const int& badQuietCount, int ply) { 
 
     int bonus = std::min(10 + 200 * depth, 4096);

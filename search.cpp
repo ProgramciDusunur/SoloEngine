@@ -433,6 +433,22 @@ int16_t negamax(Board& board, int depth, int16_t alpha, int16_t beta, int ply, S
             pvLine.clear();
             return beta; // Null-move cutoff
         }
+
+        // Refutation, our opponent has an argument
+        if (nullScore < beta) {
+            MoveInfo ref_move = moveStack[ply];
+
+            int ref_move_from = ref_move.from;
+            int ref_move_to = ref_move_to;
+            Move nmp_move = ref_move.move;
+
+            if (is_quiet(nmp_move)) {                
+                int nmp_depth = depth - R;
+                int refutation_bonus = 100 + 50 * nmp_depth;
+
+                update_single_quiet_hist_entry(board.stm, ref_move_from, ref_move_to, refutation_bonus);
+            }                        
+        }
     }
 
     Move badQuiets[MAX_MOVES];
@@ -515,7 +531,7 @@ int16_t negamax(Board& board, int depth, int16_t alpha, int16_t beta, int ply, S
             }
         }
 
-        moveStack[ply] = {board.mailbox[move_from(chosenMove)] - 1, move_to(chosenMove)};
+        moveStack[ply] = {board.mailbox[move_from(chosenMove)] - 1, move_to(chosenMove), move_from(chosenMove), chosenMove};
         board.makeMove(chosenMove);
 
         positionHistory.push_back(board.hash); // Add new position to history for repetition detection
