@@ -7,8 +7,6 @@ MovePicker::MovePicker(Board& b, Move tt, Move k1, Move k2, int p, bool qsearch)
     : board(b), ttMove(tt), ply(p), stage(STAGE_TT), moveCount(0), badCaptureCount(0), currentMoveIndex(0), isQSearch(qsearch) {
     killers[0] = k1;
     killers[1] = k2;
-    generate_legacy_moves();
-    order_moves();
 }
 
 int MovePicker::score_move(Move move) const {
@@ -53,37 +51,6 @@ int MovePicker::score_move(Move move) const {
     return score;
 }
 
-void MovePicker::generate_legacy_moves() {
-    moveCount = 0;
-    currentMoveIndex = 0;
-    badCaptureCount = 0;
-
-    if (isQSearch) {
-        get_capture_moves(board, moves, moveCount);
-    } else {
-        get_all_moves(board, moves, moveCount);
-    }
-}
-
-void MovePicker::order_moves() {
-    for (int i = 0; i < moveCount; i++) {
-        scores[i] = score_move(moves[i]);
-    }
-
-    for (int i = 1; i < moveCount; i++) {
-        int tmpScore = scores[i];
-        Move tmpMove = moves[i];
-        int j = i - 1;
-        while (j >= 0 && scores[j] < tmpScore) {
-            scores[j + 1] = scores[j];
-            moves[j + 1] = moves[j];
-            j--;
-        }
-        scores[j + 1] = tmpScore;
-        moves[j + 1] = tmpMove;
-    }
-}
-
 void MovePicker::score_captures() {
     for (int i = 0; i < moveCount; i++) {
         Move move = moves[i];
@@ -97,7 +64,13 @@ void MovePicker::score_captures() {
         int attackerPiece = piece_at_sq(board, from);
         int attackerValue = PIECE_VALUES_MP[piece_type(attackerPiece)];
 
-        scores[i] = victimValue * 10 - attackerValue;
+        int score = victimValue * 10 - attackerValue;
+
+        if (ttMove != 0 && move == ttMove) {
+            score += SCORE_TT_MOVE;
+        }
+
+        scores[i] = score;
     }
 }
 
@@ -108,7 +81,22 @@ void MovePicker::score_quiets() {
         int to = move_to(move);
         int piece = piece_at_sq(board, from);
 
-        scores[i] = get_history_score(board.stm, from, to) + get_conhist_score(piece - 1, to, ply);
+        int score = 0;
+
+        if (ttMove != 0 && move == ttMove) {
+            score += SCORE_TT_MOVE;
+        }
+
+        if (ply < MAX_PLY && move == killers[0]) {
+            score += SCORE_KILLER_1;
+        } else if (ply < MAX_PLY && move == killers[1]) {
+            score += SCORE_KILLER_2;
+        } else {
+            score += get_history_score(board.stm, from, to);
+            score += get_conhist_score(piece - 1, to, ply);
+        }
+
+        scores[i] = score;
     }
 }
 
@@ -125,13 +113,14 @@ Move MovePicker::next_scored_move() {
         }
     }
     
-    // Swap
     Move bestMove = moves[bestIndex];
     int score = scores[bestIndex];
-    
-    moves[bestIndex] = moves[currentMoveIndex];
-    scores[bestIndex] = scores[currentMoveIndex];
-    
+
+    for (int i = bestIndex; i > currentMoveIndex; i--) {
+        moves[i] = moves[i - 1];
+        scores[i] = scores[i - 1];
+    }
+
     moves[currentMoveIndex] = bestMove;
     scores[currentMoveIndex] = score;
     
@@ -139,17 +128,112 @@ Move MovePicker::next_scored_move() {
     return bestMove;
 }
 
-bool MovePicker::has_moves() const {
-    return moveCount > 0;
+bool MovePicker::has_moves() {
+    Move pseudoMoves[256];
+    int pseudoMoveCount = 0;
+    generate_pseudo_moves(board, pseudoMoves, pseudoMoveCount);
+
+    for (int i = 0; i < pseudoMoveCount; i++) {
+        if (is_legal(pseudoMoves[i])) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool MovePicker::is_legal(Move move) {
+    const bool sideToMove = board.stm == WHITE;
+
+    board.makeMove(move);
+    int kingSq = -1;
+    king_square(board, sideToMove, kingSq);
+    const bool legal = (kingSq != -1) && !is_square_attacked(board, kingSq, board.stm == WHITE);
+    board.unmakeMove(move);
+
+    return legal;
 }
 
 Move MovePicker::next_move() {
-    while (currentMoveIndex < moveCount) {
-        Move move = moves[currentMoveIndex++];
-        if (isQSearch && !staticExchangeEvaluation(board, move, 0)) {
-            continue;
+    while (true) {
+        switch (stage) {
+            case STAGE_TT:
+                stage = STAGE_GEN_NOISY;
+                if (ttMove != 0 && is_move_pseudo_legal(board, ttMove) && is_legal(ttMove)) {
+                    return ttMove;
+                }
+                break;
+
+            case STAGE_GEN_NOISY:
+                moveCount = 0;
+                currentMoveIndex = 0;
+                generate_pseudo_captures(board, moves, moveCount);
+                score_captures();
+                stage = STAGE_GOOD_NOISY;
+                break;
+
+            case STAGE_GOOD_NOISY: {
+                Move move = next_scored_move();
+                if (move != 0) {
+                    if (move == ttMove) continue;
+                    if (!staticExchangeEvaluation(board, move, 0)) {
+                        if (badCaptureCount < 256) {
+                            badCaptures[badCaptureCount++] = move;
+                        }
+                        continue;
+                    }
+                    if (!isQSearch && !is_legal(move)) {
+                        continue;
+                    }
+                    return move;
+                }
+
+                if (isQSearch) {
+                    stage = STAGE_DONE;
+                } else {
+                    stage = STAGE_GEN_QUIET;
+                }
+                break;
+            }
+
+            case STAGE_GEN_QUIET:
+                moveCount = 0;
+                currentMoveIndex = 0;
+                generate_pseudo_quiets(board, moves, moveCount);
+                score_quiets();
+                stage = STAGE_QUIET;
+                break;
+
+            case STAGE_QUIET: {
+                Move move = next_scored_move();
+                if (move != 0) {
+                    if (move == ttMove) continue;
+                    if (!is_legal(move)) {
+                        continue;
+                    }
+                    return move;
+                }
+
+                stage = STAGE_BAD_NOISY;
+                currentMoveIndex = 0;
+                break;
+            }
+
+            case STAGE_BAD_NOISY:
+                if (currentMoveIndex < badCaptureCount) {
+                    Move move = badCaptures[currentMoveIndex++];
+                    // TT move shouldn't be in badCaptures if we skipped it above, but just in case
+                    if (move == ttMove) continue;
+                    if (!is_legal(move)) {
+                        continue;
+                    }
+                    return move;
+                }
+                stage = STAGE_DONE;
+                break;
+
+            case STAGE_DONE:
+                return 0;
         }
-        return move;
     }
-    return 0;
 }

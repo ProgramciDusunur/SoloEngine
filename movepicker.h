@@ -9,8 +9,6 @@ enum Stage {
     STAGE_TT,
     STAGE_GEN_NOISY,
     STAGE_GOOD_NOISY,
-    STAGE_KILLER_1,
-    STAGE_KILLER_2,
     STAGE_GEN_QUIET,
     STAGE_QUIET,
     STAGE_BAD_NOISY,
@@ -36,16 +34,15 @@ private:
     bool isQSearch;
 
     int score_move(Move move) const;
-    void generate_legacy_moves();
-    void order_moves();
     void score_captures();
     void score_quiets();
     Move next_scored_move();
+    bool is_legal(Move move);
 
 public:
     MovePicker(Board& b, Move tt, Move k1, Move k2, int p, bool qsearch = false);
 
-    bool has_moves() const;
+    bool has_moves();
     Move next_move();
 };
 
