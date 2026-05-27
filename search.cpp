@@ -490,6 +490,7 @@ int16_t negamax(Board& board, int depth, int16_t alpha, int16_t beta, int ply, S
         // Futility Pruning (skip for killer moves)
         if (!rootNode && !isKiller && depth < 3 && !inCheck && get_promotion_type(chosenMove) == -1 && is_quiet(chosenMove)) {
             int futilityMargin = 100 + 60 * depth; // Margin increases with depth
+            futilityMargin += get_history_score(board.stm, move_from(chosenMove), move_to(chosenMove)) / 32;
             if (staticEval + futilityMargin < alpha) {
                 continue; // Skip this move, it's unlikely to raise the evaluation enough
             }
