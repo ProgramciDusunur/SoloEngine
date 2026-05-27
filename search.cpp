@@ -380,14 +380,24 @@ int16_t negamax(Board& board, int depth, int16_t alpha, int16_t beta, int ply, S
         return 0; // Stalemate
     }
 
+     int ttAdjustedEval = staticEval;
+
+    if (!ss->singularMove && ttMove && !inCheck &&
+        (ttEntry.flag == TT_EXACT ||
+         (ttEntry.flag == TT_ALPHA && ttEntry.score >= staticEval) ||
+         (ttEntry.flag == TT_BETA && ttEntry.score <= staticEval))) {
+
+        ttAdjustedEval = ttEntry.score;
+    }
+
     // Reverse Futility Pruning
     if (!rootNode && !ss->singularMove && !inCheck && !pvNode && depth < 9 && beta < MATE_SCORE - 100){
 
         int margin = 80 * (depth - improving);
 
-        if (staticEval - margin >= beta) {
+        if (ttAdjustedEval - margin >= beta) {
             // I am so far ahead that even if I reduce my score by the margin, I am still above beta. No need to search this node.
-            return staticEval - margin;
+            return ttAdjustedEval - margin;
         }
     }
 
