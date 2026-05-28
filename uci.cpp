@@ -279,12 +279,14 @@ int handle_uci_commands(int argc, char* argv[]){
                 int mb = std::max(1, std::stoi(value));
                 ttTable.resize(mb);
                 ttTable.clear();
+                std::cout << "info string set Hash to " << mb << " MB, entries " << ttTable.count() << std::endl;
             } else if (name == "Use_NNUE") {
                 USE_NNUE = (value == "true");
                 if (USE_NNUE) {
                     board.accValid[0] = true;
                     RefreshAccumulator(board, &board.accStack[0][0], &board.accStack[0][1]);
                 }
+                std::cout << "info string set Use_NNUE to " << (USE_NNUE ? "true" : "false") << std::endl;
             }
 
         }

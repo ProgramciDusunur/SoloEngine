@@ -754,14 +754,23 @@ Move getBestMove(Board& board, int maxDepth, int movetimeMs, const std::vector<u
         
         
         if (!silent) {
-            std::cout << "info depth " << iterativeDepth
-                      << " seldepth " << getSeldepth()
-                      << " hashfull " << hash_full()
-                      << " time " << elapsedMs
-                      << " nps " << nps
-                      << " score cp " << score
-                      << " pv ";
-
+            if (score <= MATE_SCORE - MAX_PLY) {
+                std::cout << "info depth " << iterativeDepth
+                          << " seldepth " << getSeldepth()
+                          << " hashfull " << hash_full()
+                          << " time " << elapsedMs
+                          << " nps " << nps
+                          << " score cp " << score
+                          << " pv ";
+            } else {
+                std::cout << "info depth " << iterativeDepth
+                          << " seldepth " << getSeldepth()
+                          << " hashfull " << hash_full()
+                          << " time " << elapsedMs
+                          << " nps " << nps
+                          << " score mate " << (MATE_SCORE - score + 1) / 2
+                          << " pv ";
+            }
             for (int i = 0; i < pvLength[0]; i++) {
                 std::cout << move_to_uci(pvTable[0][i]) << " ";
             }
