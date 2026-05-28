@@ -380,6 +380,16 @@ int16_t negamax(Board& board, int depth, int16_t alpha, int16_t beta, int ply, S
         return 0; // Stalemate
     }
 
+    int ttAdjustedEval = staticEval;
+
+    if (!ss->singularMove && ttMove && !inCheck &&
+        (ttEntry.flag == TT_EXACT ||
+         (ttEntry.flag == TT_ALPHA && ttEntry.score >= staticEval) ||
+         (ttEntry.flag == TT_BETA && ttEntry.score <= staticEval))) {
+
+        ttAdjustedEval = ttEntry.score;
+    }
+
     // Reverse Futility Pruning
     if (!rootNode && !ss->singularMove && !inCheck && !pvNode && depth < 9 && beta < MATE_SCORE - 100){
 
@@ -401,7 +411,7 @@ int16_t negamax(Board& board, int depth, int16_t alpha, int16_t beta, int ply, S
     }
 
     // Null Move Pruning
-    if (!rootNode && !ss->singularMove && !inCheck && depth >= 3 && !pvNode) {
+    if (!rootNode && !ss->singularMove && !inCheck && depth >= 3 && !pvNode && ttAdjustedEval >= beta) {
         const int prevEnPassant = board.enPassant;
         const uint64_t prevHash = board.hash;
 
