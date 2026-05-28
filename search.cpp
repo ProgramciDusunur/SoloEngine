@@ -493,6 +493,11 @@ int16_t negamax(Board& board, int depth, int16_t alpha, int16_t beta, int ply, S
             else if (singularBeta >= beta) {
                 return singularBeta;
             }
+
+            // Negative Extensions
+            else if (ttEntry.score >= beta) {
+                extension = -1;
+            }
         }
 
 
