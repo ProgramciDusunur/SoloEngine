@@ -260,6 +260,12 @@ int16_t qsearch(Board& board, int16_t alpha, int16_t beta, int ply, SearchStack*
             board.unmakeMove(captureMove);
             continue;
         }
+
+        // QS SEE Pruning
+        if (!staticExchangeEvaluation(board, captureMove, 0)) {
+            board.unmakeMove(captureMove);
+            continue;
+        }
         
         int eval = -qsearch(board, -beta, -alpha, ply + 1, ss + 1);
         
